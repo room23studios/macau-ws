@@ -62,6 +62,16 @@ func (s *Server) Handler(w http.ResponseWriter, r *http.Request) {
 
 			claims := t.Claims.(*HelloClaims)
 			log.Printf("Game %s: '%s' joins.\n", claims.GameID, claims.Nick)
+
+			gameInterface, loaded := s.games.LoadOrStore(claims.GameID, &Game{
+				ID:      claims.GameID,
+				Players: []string{},
+			})
+
+			game := gameInterface.(*Game)
+			// TODO: start a game goroutine and pass events there
+
+			log.Printf("game %s, loaded? %t, nicks: %s", game.ID, loaded, game.Players)
 		}
 	}
 }
