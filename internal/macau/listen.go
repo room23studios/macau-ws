@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/Room23Studios/macau-ws/internal/proto"
+	"github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/websocket"
 )
 
@@ -18,6 +20,12 @@ func (s *Server) Listen(addr string) {
 	http.HandleFunc("/socket", s.Handler)
 	log.Printf("Listening at %s\n", addr)
 	log.Fatal(http.ListenAndServe(addr, nil))
+}
+
+type HelloClaims struct {
+	GameID string `json:"game_id"`
+	Nick   string `json:"nick"`
+	jwt.StandardClaims
 }
 
 func (s *Server) Handler(w http.ResponseWriter, r *http.Request) {
@@ -43,8 +51,17 @@ func (s *Server) Handler(w http.ResponseWriter, r *http.Request) {
 		switch c := command.(type) {
 		case *proto.CommandPing:
 			fmt.Println("got pinged:", c.Payload)
-		case *proto.CommandJoin:
-			fmt.Println("join received:", c.GamePIN)
+		case *proto.CommandHello:
+			t, err := jwt.ParseWithClaims(c.Token, &HelloClaims{}, func(token *jwt.Token) (interface{}, error) {
+				return []byte(os.Getenv("JWT_SECRET")), nil
+			})
+			if err != nil {
+				log.Println(err)
+				return // TODO: send an error
+			}
+
+			claims := t.Claims.(*HelloClaims)
+			log.Printf("Game %s: '%s' joins.\n", claims.GameID, claims.Nick)
 		}
 	}
 }

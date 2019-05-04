@@ -23,8 +23,8 @@ func ParseMessage(data []byte) (interface{}, error) {
 	var command interface{}
 
 	switch m.Command {
-	case "join":
-		command = &CommandJoin{}
+	case "hello":
+		command = &CommandHello{}
 	case "ping":
 		command = &CommandPing{}
 	default:
