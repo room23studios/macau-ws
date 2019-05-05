@@ -14,6 +14,9 @@ import (
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
 	WriteBufferSize: 1024,
+	CheckOrigin: func(r *http.Request) bool {
+		return true
+	},
 }
 
 func (s *Server) Listen(addr string) {
@@ -69,6 +72,7 @@ func (s *Server) Handler(w http.ResponseWriter, r *http.Request) {
 			})
 
 			game := gameInterface.(*Game)
+			conn.WriteJSON(map[string]interface{}{"command": "hello", "data": map[string]interface{}{}})
 			// TODO: start a game goroutine and pass events there
 
 			log.Printf("game %s, loaded? %t, nicks: %s", game.ID, loaded, game.Players)
